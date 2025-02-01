@@ -3,3 +3,4 @@ opencv-python-headless
 deepface==0.0.93
 mediapipe==0.10.20
 tf-keras
+streamlit-webrtc
