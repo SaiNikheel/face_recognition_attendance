@@ -1,5 +1,5 @@
-streamlit 
-opencv-python-headless 
-deepface
-mediapipe
-pandas
+streamlit==1.41.1
+opencv-python==4.8.1.78
+deepface==0.0.93
+mediapipe==0.10.20
+pandas==4.8.1.78
