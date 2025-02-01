@@ -3,24 +3,19 @@ import pandas as pd
 from datetime import datetime
 from deepface import DeepFace
 import streamlit as st
-import mediapipe as mp
 import cv2
-import time
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
+import numpy as np
 
 # Paths
 database_path = 'Database'
 attendance_file = 'attendance.csv'
-
-# Initialize Mediapipe Face Detection
-mp_face_detection = mp.solutions.face_detection
-face_detection = mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.5)
 
 # Initialize the attendance log (if not exists)
 if not os.path.exists(attendance_file):
     df = pd.DataFrame(columns=["Name", "Date", "Time"])
     df.to_csv(attendance_file, index=False)
 
+# Function to recognize face
 def recognition(verification_image):  
     identity_verify = DeepFace.find(img_path=verification_image, db_path=database_path, model_name='Facenet512')
     try:
@@ -30,11 +25,7 @@ def recognition(verification_image):
     except:
         return None, None
 
-def detect_face(image):
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    results = face_detection.process(image_rgb)
-    return "green" if results.detections else "red"
-
+# Function to log attendance
 def log_attendance(user_name):
     current_time = datetime.now()
     date = current_time.date()
@@ -45,23 +36,36 @@ def log_attendance(user_name):
     df = pd.concat([df, new_df], ignore_index=True)
     df.to_csv(attendance_file, index=False)
 
-# WebRTC Video Processor
-class VideoProcessor(VideoTransformerBase):
-    def transform(self, frame):
-        img = frame.to_ndarray(format="bgr24")
-        border_color = detect_face(img)
-        img = cv2.copyMakeBorder(img, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=(0, 255, 0) if border_color == "green" else (0, 0, 255))
-        return img
-
 # Streamlit UI
 st.title("Face Recognition System")
-st.subheader("Align your face and validate")
+st.subheader("Capture an Image for Recognition")
 
-# WebRTC Streamer
-webrtc_ctx = webrtc_streamer(key="example", video_transformer_factory=VideoProcessor)
+# Capture image from camera
+camera_image = st.camera_input("Take a picture")
 
-if webrtc_ctx.video_transformer:
-    st.write("Webcam Stream Active")
+if camera_image:
+    file_path = "temp_image.jpg"
+    
+    # Convert to OpenCV format
+    image_bytes = camera_image.getvalue()
+    nparr = np.frombuffer(image_bytes, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    
+    # Save the image
+    cv2.imwrite(file_path, img)
+    
+    # Display captured image
+    st.image(file_path, caption="Captured Image", use_column_width=True)
+    
+    # Perform recognition
+    verified_name, image_path = recognition(file_path)
+    
+    if verified_name:
+        log_attendance(verified_name)
+        st.success(f"Attendance Verified for {verified_name}!")
+        st.image(image_path, caption="Matched Image", use_column_width=True)
+    else:
+        st.error("User not found in the database!")
 
 # Attendance Page
 def attendance_page():
