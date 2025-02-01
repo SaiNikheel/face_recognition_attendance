@@ -5,6 +5,8 @@ from deepface import DeepFace
 import streamlit as st
 import mediapipe as mp
 import cv2
+import time
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 # Paths
 database_path = 'Database'
@@ -19,7 +21,6 @@ if not os.path.exists(attendance_file):
     df = pd.DataFrame(columns=["Name", "Date", "Time"])
     df.to_csv(attendance_file, index=False)
 
-# Function to recognize face
 def recognition(verification_image):  
     identity_verify = DeepFace.find(img_path=verification_image, db_path=database_path, model_name='Facenet512')
     try:
@@ -29,7 +30,11 @@ def recognition(verification_image):
     except:
         return None, None
 
-# Function to log attendance
+def detect_face(image):
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    results = face_detection.process(image_rgb)
+    return "green" if results.detections else "red"
+
 def log_attendance(user_name):
     current_time = datetime.now()
     date = current_time.date()
@@ -40,30 +45,23 @@ def log_attendance(user_name):
     df = pd.concat([df, new_df], ignore_index=True)
     df.to_csv(attendance_file, index=False)
 
+# WebRTC Video Processor
+class VideoProcessor(VideoTransformerBase):
+    def transform(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+        border_color = detect_face(img)
+        img = cv2.copyMakeBorder(img, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=(0, 255, 0) if border_color == "green" else (0, 0, 255))
+        return img
+
 # Streamlit UI
 st.title("Face Recognition System")
-st.subheader("Upload an Image for Recognition")
+st.subheader("Align your face and validate")
 
-# File uploader
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "png", "jpeg"])
+# WebRTC Streamer
+webrtc_ctx = webrtc_streamer(key="example", video_transformer_factory=VideoProcessor)
 
-if uploaded_file:
-    file_path = f"temp_image.{uploaded_file.name.split('.')[-1]}"
-    with open(file_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
-    
-    # Display uploaded image
-    st.image(file_path, caption="Uploaded Image", use_column_width=True)
-    
-    # Perform recognition
-    verified_name, image_path = recognition(file_path)
-    
-    if verified_name:
-        log_attendance(verified_name)
-        st.success(f"Attendance Verified for {verified_name}!")
-        st.image(image_path, caption="Matched Image", use_column_width=True)
-    else:
-        st.error("User not found in the database!")
+if webrtc_ctx.video_transformer:
+    st.write("Webcam Stream Active")
 
 # Attendance Page
 def attendance_page():
