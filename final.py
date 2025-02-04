@@ -5,6 +5,7 @@ from deepface import DeepFace
 import streamlit as st
 import cv2
 import numpy as np
+import pytz
 
 # Paths
 database_path = 'Database'
@@ -27,7 +28,8 @@ def recognition(verification_image):
 
 # Function to log attendance
 def log_attendance(user_name):
-    current_time = datetime.now()
+    ist = pytz.timezone('Asia/Kolkata')
+    current_time = datetime.now(ist)
     date = current_time.date()
     time_str = current_time.strftime("%H:%M:%S")
     
