@@ -18,12 +18,13 @@ if not os.path.exists(attendance_file):
 
 # Function to recognize face
 def recognition(verification_image):  
+
+    # Added for showing spoof detection
+    # st.error('Spoof detected: The system recognizes that a photo was used for verification. As a result, no user was found in the database. Please use a live face for accurate verification.')
+    # return None, None
+    
     try:
         identity_verify = DeepFace.find(img_path=verification_image, db_path=database_path, anti_spoofing=True, model_name='Facenet512')
-    except ValueError:
-        st.error('Spoof detected: The system recognizes that a photo was used for verification. As a result, no user was found in the database. Please use a live face for accurate verification.')
-        return None, None
-    try:
         found_image_path = identity_verify[0]['identity'][0].split('/')
         verified_person = found_image_path[-2]
         return verified_person, identity_verify[0]['identity'][0]
