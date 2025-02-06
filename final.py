@@ -61,7 +61,7 @@ if camera_image:
     cv2.imwrite(file_path, img)
     
     # Display captured image
-    st.image(file_path, caption="Captured Image", use_column_width=True)
+    st.image(file_path, caption="Captured Image", use_container_width=True)
     
     # Perform recognition
     verified_name, image_path = recognition(file_path)
@@ -69,7 +69,7 @@ if camera_image:
     if verified_name:
         log_attendance(verified_name)
         st.success(f"Attendance Verified for {verified_name}!")
-        st.image(image_path, caption="Matched Image", use_column_width=True)
+        st.image(image_path, caption="Matched Image", use_container_width=True)
     else:
         st.error("User not found in the database!")
 
