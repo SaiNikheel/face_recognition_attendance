@@ -68,7 +68,7 @@ if camera_image:
         st.success(f"Attendance Verified for {verified_name}!")
         st.image(image_path, caption="Matched Image", use_container_width=True)
     else:
-        st.error("User not found in the database!")
+        st.error("User not found in the database!, Or no Live person on the picture.")
 
 # Attendance Page
 def attendance_page():
