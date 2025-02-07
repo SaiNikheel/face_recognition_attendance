@@ -18,7 +18,7 @@ if not os.path.exists(attendance_file):
 
 # Function to recognize face
 def recognition(verification_image):  
-    identity_verify = DeepFace.find(img_path=verification_image, db_path=database_path, model_name='Facenet512')
+    identity_verify = DeepFace.find(img_path=verification_image, anti_spoofing=True, db_path=database_path, model_name='Facenet512')
     try:
         found_image_path = identity_verify[0]['identity'][0].split('/')
         verified_person = found_image_path[-2]
@@ -58,7 +58,7 @@ if camera_image:
     cv2.imwrite(file_path, img)
 
     # Display captured image
-    st.image(file_path, caption="Captured Image", use_column_width=True)
+    st.image(file_path, caption="Captured Image", use_container_width=True)
 
     # Perform recognition
     verified_name, image_path = recognition(file_path)
@@ -66,7 +66,7 @@ if camera_image:
     if verified_name:
         log_attendance(verified_name)
         st.success(f"Attendance Verified for {verified_name}!")
-        st.image(image_path, caption="Matched Image", use_column_width=True)
+        st.image(image_path, caption="Matched Image", use_container_width=True)
     else:
         st.error("User not found in the database!")
 
