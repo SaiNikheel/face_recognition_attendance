@@ -18,8 +18,8 @@ if not os.path.exists(attendance_file):
 
 # Function to recognize face
 def recognition(verification_image):  
-    identity_verify = DeepFace.find(img_path=verification_image, anti_spoofing=True, db_path=database_path, model_name='Facenet512')
     try:
+        identity_verify = DeepFace.find(img_path=verification_image, anti_spoofing=True, db_path=database_path, model_name='Facenet512')
         found_image_path = identity_verify[0]['identity'][0].split('/')
         verified_person = found_image_path[-2]
         return verified_person, identity_verify[0]['identity'][0]
